@@ -61,106 +61,107 @@ This project implements a scalable backend architecture using the MVVM (Model-Vi
 
 - internal/app/controllers:
     - user_controller.go: Contains handlers for managing requests related to User. This is the View part of MVVM.
-    
-internal/app/viewmodels:
 
-user_viewmodel.go: Manages the presentation logic for User, handling data sent from or to the Controller.
-internal/app/models:
+- internal/app/viewmodels:
+    - user_viewmodel.go: Manages the presentation logic for User, handling data sent from or to the Controller.
 
-user.go: Defines the User entity, including properties and possibly basic validations. This is the Model part of MVVM.
-internal/app/services:
+- internal/app/models:
+    - user.go: Defines the User entity, including properties and possibly basic validations. This is the Model part of MVVM.
 
-user_service.go: Contains business logic and interactions with ORM (e.g., GORM) for User. It serves as the connection between the Model and ViewModel.
-internal/app/repositories:
+- internal/app/services:
+    - user_service.go: Contains business logic and interactions with ORM (e.g., GORM) for User. It serves as the connection between the Model and ViewModel.
 
-user_repository.go: Handles data access (CRUD operations) with the database. This layer abstracts the ORM, allowing database technology changes without affecting business logic.
-internal/app/mappers:
+- internal/app/repositories:
+    - user_repository.go: Handles data access (CRUD operations) with the database. This layer abstracts the ORM, allowing database technology changes without affecting business logic.
 
-user_mapper.go: Contains logic to map data from Model to ViewModel or vice versa. This is useful for converting raw data from the database into a format ready for presentation in the View.
-internal/config:
+- internal/app/mappers:
+    - user_mapper.go: Contains logic to map data from Model to ViewModel or vice versa. This is useful for converting raw data from the database into a format ready for presentation in the View.
 
-config.go: Contains application configuration such as database connections, server settings, etc., usually sourced from .env.
-internal/db:
+- internal/config:
+    - config.go: Contains application configuration such as database connections, server settings, etc., usually sourced from .env.
 
-migrations/: This directory contains SQL files for database migrations, ensuring the database schema is up-to-date with application requirements.
-db.go: Manages the database connection and provides setup functions.
-pkg/utils:
+- internal/db:
+    - migrations/: This directory contains SQL files for database migrations, ensuring the database schema is up-to-date with application requirements.
+    - db.go: Manages the database connection and provides setup functions.
 
-logger.go: Utility functions for logging that can be used throughout the application.
-json.go: Utility functions for JSON serialization and deserialization.
-go.mod & go.sum:
+- pkg/utils:
+    - logger.go: Utility functions for logging that can be used throughout the application.
+    - json.go: Utility functions for JSON serialization and deserialization.
 
-Manage project dependencies in Golang.
-Dockerfile:
+- go.mod & go.sum:
+    - Manage project dependencies in Golang.
 
-Instructions for containerizing the application using Docker.
-.env:
+- Dockerfile:
+    - Instructions for containerizing the application using Docker.
 
-Contains environment variables such as database connections, API keys, etc.
-README.md:
+- .env:
+    - Contains environment variables such as database connections, API keys, etc.
 
-Project documentation that provides basic information on how to run and develop the application.
+- README.md:
+    - Project documentation that provides basic information on how to run and develop the application.
 
 # Implementation Steps
-Routes Setup:
+- Routes Setup:
+    -Define your routes in internal/app/routes/routes.go.
+    - Add appropriate middleware to routes that require authentication, logging, etc.
 
-Define your routes in internal/app/routes/routes.go.
-Add appropriate middleware to routes that require authentication, logging, etc.
-Middleware Implementation:
+- Middleware Implementation:
+    - Implement authentication, logging, and recovery logic in internal/app/middleware.
 
-Implement authentication, logging, and recovery logic in internal/app/middleware.
-Controller/Handler:
+- Controller/Handler:
+    - Create HTTP handlers in internal/app/controllers that interact with the ViewModel.
 
-Create HTTP handlers in internal/app/controllers that interact with the ViewModel.
-ViewModel Logic:
+- ViewModel Logic:
+    - Implement the presentation logic in internal/app/viewmodels.
 
-Implement the presentation logic in internal/app/viewmodels.
-Model Definition:
+- Model Definition:
+    - Define your entities and business logic in internal/app/models.
 
-Define your entities and business logic in internal/app/models.
-Service Layer:
+- Service Layer:
+    - Implement business logic and interactions with ORM in internal/app/services.
 
-Implement business logic and interactions with ORM in internal/app/services.
-Repository Layer:
+- Repository Layer:
+    - Create abstractions for data access in internal/app/repositories.
 
-Create abstractions for data access in internal/app/repositories.
-Mapping Model:
+- Mapping Model:
+    - Implement mapping between Model and ViewModel in internal/app/mappers.
 
-Implement mapping between Model and ViewModel in internal/app/mappers.
-Getting Started
+
+# Getting Started
 Clone the repository:
 
-bash
-Copy code
+```bash
 git clone https://github.com/yourusername/backend-golang-mvvm.git
 cd backend-golang-mvvm
-Install dependencies:
+```
 
-bash
-Copy code
+# Install dependencies:
+```bash
 go mod download
-Run database migrations:
+```
 
-bash
-Copy code
+# Run database migrations:
+``` bash
 go run internal/db/migrations.go
-Run the application:
+```
 
-bash
-Copy code
+# Run the application:
+```bash
 go run cmd/app/main.go
-Build Docker image:
+```
 
-bash
-Copy code
+# Build Docker image:
+```bash
 docker build -t backend-golang-mvvm .
-Run the Docker container:
+```
 
-bash
-Copy code
+# Run the Docker container:
+```bash
 docker run -p 8080:8080 backend-golang-mvvm
-Contributing
+```
+
+# Contributing
 Contributions are welcome! Please fork this repository and submit a pull request with your improvements.
 
-License
+# License
 This project is licensed under the MIT License - see the LICENSE file for details.
