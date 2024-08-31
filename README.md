@@ -47,21 +47,21 @@ This project implements a scalable backend architecture using the MVVM (Model-Vi
 └── README.md                # Project documentation
 ```
 
-Explanation of Structure
-cmd/app/main.go:
+# Explanation of Structure
 
-Entry point of the application that initializes the server and sets up routes.
-internal/app/routes:
+- cmd/app/main.go:
+    - Entry point of the application that initializes the server and sets up routes.
 
-routes.go: Contains all API routes and groups middleware. This file manages which endpoints are directed to which handlers.
-internal/app/middleware:
+- internal/app/routes:
+    - routes.go: Contains all API routes and groups middleware. This file manages which endpoints are directed to which handlers.
+- internal/app/middleware:
+    - auth.go: Middleware for request authentication.
+    - logging.go: Middleware for logging requests and responses.
+    - recovery.go: Middleware for recovering the application from panic and returning appropriate error messages.
 
-auth.go: Middleware for request authentication.
-logging.go: Middleware for logging requests and responses.
-recovery.go: Middleware for recovering the application from panic and returning appropriate error messages.
-internal/app/controllers:
-
-user_controller.go: Contains handlers for managing requests related to User. This is the View part of MVVM.
+- internal/app/controllers:
+    - user_controller.go: Contains handlers for managing requests related to User. This is the View part of MVVM.
+    
 internal/app/viewmodels:
 
 user_viewmodel.go: Manages the presentation logic for User, handling data sent from or to the Controller.
@@ -100,7 +100,8 @@ Contains environment variables such as database connections, API keys, etc.
 README.md:
 
 Project documentation that provides basic information on how to run and develop the application.
-Implementation Steps
+
+# Implementation Steps
 Routes Setup:
 
 Define your routes in internal/app/routes/routes.go.
