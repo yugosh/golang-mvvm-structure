@@ -45,6 +45,7 @@ This project implements a scalable backend architecture using the MVVM (Model-Vi
 └── Dockerfile               # Docker containerization instructions
 └── .env                     # Environment variables
 └── README.md                # Project documentation
+```
 
 Explanation of Structure
 cmd/app/main.go:
