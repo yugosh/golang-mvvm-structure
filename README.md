@@ -72,20 +72,20 @@ Clone the repository:
 git clone https://github.com/yugosh/backend-golang-mvvm.git
 ```
 
+## Install node_modules nodejs
 ```bash
 cd socketio
 ```
 
-## Install node_modules nodejs
 ```bash
 npm i
 ```
 
+## Install dependencies:
 ```bash
 cd backend-golang-mvvm
 ```
 
-## Install dependencies:
 ```bash
 go mod download
 ```
