@@ -1,143 +1,86 @@
-# Backend Golang MVVM Architecture
+# Backend Golang MVVM Architecture with (RabbitMQ, Redis, SocketIO, NodeJS/ExpressJS)
 
-This project implements a scalable backend architecture using the MVVM (Model-View-ViewModel) pattern in Golang. The architecture is designed to separate concerns and improve maintainability and scalability.
+This project is designed to implement a scalable backend architecture using the MVVM (Model-View-ViewModel) pattern in Golang. The architecture is built to enhance modularity, maintainability, and scalability for modern backend services. Key components include integration with RabbitMQ for message queuing, Redis for in-memory data storage, and Socket.IO for real-time communication. NodeJS (with ExpressJS) is also used as an additional layer for specific services such as handling Socket.IO and serving real-time data.
 
 ## Project Structure
 
 ```bash
-/backend-golang-mvvm
-├── cmd
+/BACKENG-GOLANG-MVVM
+├── DockerFile                     # Dockerfile for the Go application (Golang backend)
+├── Makefile                       # Makefile for automation tasks like build and other commands
+├── README.md                      # Project documentation
+├── attachment                     # Folder to store attachment files, such as images or PDFs
+│   ├── images01.jpg               # Example image in the attachment folder
+│   └── test.pdf                   # Example PDF file in the attachment folder
+├── cmd                            # Main folder for the Go application (entry point of the app)
 │   └── app
-│       └── main.go          # Entry point of the application
-├── internal
-│   ├── app
-│   │   ├── routes           # API routes and middleware grouping
-│   │   │   └── routes.go
-│   │   ├── middleware       # Middleware for request & response handling
-│   │   │   ├── auth.go
-│   │   │   ├── logging.go
-│   │   │   └── recovery.go
-│   │   ├── controllers      # Controllers/Handlers for HTTP requests
-│   │   │   └── user_controller.go
-│   │   ├── viewmodels       # ViewModels for presentation logic
-│   │   │   └── user_viewmodel.go
-│   │   ├── models           # Models for data structures and business logic
-│   │   │   └── user.go
-│   │   ├── services         # Business logic and ORM interactions
-│   │   │   └── user_service.go
-│   │   ├── repositories     # Data access and CRUD operations
-│   │   │   └── user_repository.go
-│   │   └── mappers          # Mapping between Models and ViewModels
-│   │       └── user_mapper.go
-│   ├── config               # Application configuration
-│   │   └── config.go
-│   └── db
-│       ├── migrations       # Database migration scripts
-│       │   └── 001_create_users_table.up.sql
-│       └── db.go            # Database connection setup
-├── pkg                      # Reusable utility packages
-│   └── utils
-│       ├── logger.go
-│       └── json.go
-└── go.mod                   # Dependency management
-└── go.sum                   # Dependency lock file
-└── Makefile                 # Build and run commands
-└── Dockerfile               # Docker containerization instructions
-└── .env                     # Environment variables
-└── README.md                # Project documentation
+│       └── main.go                # Main Go file to run the application
+├── docker-compose.yml             # Docker Compose file to orchestrate multiple services (Go, Node.js, Redis, RabbitMQ, Azure SQL)
+├── go.mod                         # Go module file for managing dependencies
+├── go.sum                         # Go checksum file to ensure dependency integrity
+├── internal                       # Internal folder for application logic
+│   ├── app                        # Application folder containing controllers, services, and models
+│   │   ├── controllers            # Folder for controller logic
+│   │   │   ├── auth_controller.go # Authentication-related controller
+│   │   │   ├── base_controller.go # Base controller for common functionalities
+│   │   │   ├── notification_controller.go # Controller for handling notifications
+│   │   │   └── user_controller.go  # Controller for user-related functionalities
+│   │   ├── mappers                 # Folder for data mapping logic
+│   │   │   └── user_mapper.go      # Mapper for user-related data transformations
+│   │   ├── middleware              # Folder for middlewares
+│   │   │   └── cors_middleware.go  # Middleware for handling CORS
+│   │   ├── models                  # Folder for defining models
+│   │   │   └── user.go             # User model definition
+│   │   ├── repositories            # Folder for repository logic
+│   │   │   └── user_repository.go  # User repository for data persistence
+│   │   ├── routes                  # Folder for route definitions
+│   │   │   └── routes.go           # Main route file
+│   │   ├── services                # Folder for business logic and services
+│   │   │   ├── consumer.go         # RabbitMQ consumer service
+│   │   │   ├── firebase.go         # Service for Firebase interactions
+│   │   │   ├── producer.go         # RabbitMQ producer service
+│   │   │   ├── socketio.go         # Service for handling Socket.IO logic
+│   │   └── viewmodels              # Folder for view models
+│       │   └── user_viewmodel.go   # View model for user-related data
+│   ├── config                      # Configuration files for the application
+│   │   ├── rabbitmq.go             # RabbitMQ configuration
+│   │   ├── redis.go                # Redis configuration
+│   │   └── serviceAccountKey.json  # Firebase service account key for push notifications
+│   └── db                          # Database-related logic and migrations
+│       ├── db.go                   # Main database initialization file
+│       └── migrations              # Folder for database migrations
+├── pkg                            # Folder for utilities and reusable components
+│   └── utils                       # Utility functions
+├── socketio                        # Folder for the Socket.IO Node.js service
+│   ├── Dockerfile                  # Dockerfile for the Node.js application
+│   ├── index.js                    # Main entry point for the Socket.IO server
+│   └── package.json                # Package.json for managing Node.js dependencies
+├── static                          # Folder for static HTML and frontend files
+│   ├── dashboard.html              # Dashboard HTML page
+│   ├── firebase-messaging-sw.js    # Firebase service worker file for notifications
+│   ├── formula.html                # Formula page HTML file
+│   ├── index.html                  # Main landing page for the application
+│   ├── javascript.js               # JavaScript file for handling client-side logic
+│   ├── notification.html           # Notification page HTML file
+│   └── register.html               # Registration page HTML file
 ```
-
-# Explanation of Structure
-
-- cmd/app/main.go:
-    - Entry point of the application that initializes the server and sets up routes.
-
-- internal/app/routes:
-    - routes.go: Contains all API routes and groups middleware. This file manages which endpoints are directed to which handlers.
-- internal/app/middleware:
-    - auth.go: Middleware for request authentication.
-    - logging.go: Middleware for logging requests and responses.
-    - recovery.go: Middleware for recovering the application from panic and returning appropriate error messages.
-
-- internal/app/controllers:
-    - user_controller.go: Contains handlers for managing requests related to User. This is the View part of MVVM.
-
-- internal/app/viewmodels:
-    - user_viewmodel.go: Manages the presentation logic for User, handling data sent from or to the Controller.
-
-- internal/app/models:
-    - user.go: Defines the User entity, including properties and possibly basic validations. This is the Model part of MVVM.
-
-- internal/app/services:
-    - user_service.go: Contains business logic and interactions with ORM (e.g., GORM) for User. It serves as the connection between the Model and ViewModel.
-
-- internal/app/repositories:
-    - user_repository.go: Handles data access (CRUD operations) with the database. This layer abstracts the ORM, allowing database technology changes without affecting business logic.
-
-- internal/app/mappers:
-    - user_mapper.go: Contains logic to map data from Model to ViewModel or vice versa. This is useful for converting raw data from the database into a format ready for presentation in the View.
-
-- internal/config:
-    - config.go: Contains application configuration such as database connections, server settings, etc., usually sourced from .env.
-
-- internal/db:
-    - migrations/: This directory contains SQL files for database migrations, ensuring the database schema is up-to-date with application requirements.
-    - db.go: Manages the database connection and provides setup functions.
-
-- pkg/utils:
-    - logger.go: Utility functions for logging that can be used throughout the application.
-    - json.go: Utility functions for JSON serialization and deserialization.
-
-- go.mod & go.sum:
-    - Manage project dependencies in Golang.
-
-- Dockerfile:
-    - Instructions for containerizing the application using Docker.
-
-- .env:
-    - Contains environment variables such as database connections, API keys, etc.
-
-- README.md:
-    - Project documentation that provides basic information on how to run and develop the application.
-
-# Implementation Steps
-- Routes Setup:
-    -Define your routes in internal/app/routes/routes.go.
-    - Add appropriate middleware to routes that require authentication, logging, etc.
-
-- Middleware Implementation:
-    - Implement authentication, logging, and recovery logic in internal/app/middleware.
-
-- Controller/Handler:
-    - Create HTTP handlers in internal/app/controllers that interact with the ViewModel.
-
-- ViewModel Logic:
-    - Implement the presentation logic in internal/app/viewmodels.
-
-- Model Definition:
-    - Define your entities and business logic in internal/app/models.
-
-- Service Layer:
-    - Implement business logic and interactions with ORM in internal/app/services.
-
-- Repository Layer:
-    - Create abstractions for data access in internal/app/repositories.
-
-- Mapping Model:
-    - Implement mapping between Model and ViewModel in internal/app/mappers.
-
 
 # Getting Started
 Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/backend-golang-mvvm.git
+git clone https://github.com/yugosh/backend-golang-mvvm.git
 cd backend-golang-mvvm
 ```
 
 # Install dependencies:
 ```bash
 go mod download
+```
+
+# Change .ENV variable APP_ENV to 'blank'
+```bash
+APP_ENV=local
 ```
 
 # Run database migrations:
@@ -150,14 +93,16 @@ go run internal/db/migrations.go
 go run cmd/app/main.go
 ```
 
-# Build Docker image:
+## RUN USING DOCKER
+
+# Change .ENV variable APP_ENV to 'docker'
 ```bash
-docker build -t backend-golang-mvvm .
+APP_ENV=docker
 ```
 
-# Run the Docker container:
+# Build Docker:
 ```bash
-docker run -p 8080:8080 backend-golang-mvvm
+docker-compose up --build
 ```
 
 # Contributing

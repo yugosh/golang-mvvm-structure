@@ -1,0 +1,46 @@
+# Gunakan base image untuk aplikasi Golang
+FROM golang:1.23-alpine as builder
+
+# Install necessary tools
+RUN apk add --no-cache git bash
+
+# Set the current working directory inside the container
+WORKDIR /app
+
+# Dockerfile untuk aplikasi Golang
+COPY ./static /app/static
+
+# Copy the go mod and sum files
+COPY go.mod go.sum ./
+
+# Download all dependencies. Dependencies will be cached if the go.mod and go.sum files are not changed
+RUN go mod download
+
+# Copy the source code
+COPY . .
+
+# Build the Go app
+RUN go build -o main .
+
+# Stage for running the final container
+FROM alpine:latest
+
+# Install Postgres, RabbitMQ, and Redis clients
+RUN apk add --no-cache postgresql-client redis rabbitmq-server
+
+# Set environment variables for PostgreSQL
+ENV POSTGRES_USER=postgres
+ENV POSTGRES_PASSWORD=12345
+ENV POSTGRES_DB=db_localhost
+
+# Expose ports for PostgreSQL, RabbitMQ, and Redis
+EXPOSE 5432 5672 15672 6379
+
+# Copy the built Go app from the builder stage
+COPY --from=builder /app/main /app/main
+
+# Copy additional configuration files if necessary
+# COPY ./init.sql /docker-entrypoint-initdb.d/
+
+# Define entrypoint to run RabbitMQ, Redis, and your Go application
+CMD ["sh", "-c", "redis-server & rabbitmq-server & /app/main"]

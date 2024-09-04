@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formula Calculator</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">Dashboard</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="/dashboard">Home</a> <!-- Link kembali ke dashboard -->
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/formula">Formula</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main content from formula.html -->
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Formula Calculator</h5>
+                        <div class="input-container mb-4">
+                            <label for="expression">Input Expression:</label>
+                            <input type="text" id="expression" class="form-control" placeholder="Enter your expression here">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="base_salary">Base Salary:</label>
+                            <input type="number" id="base_salary" class="form-control" value="5000000">
+                        </div>
+                        <div class="form-group">
+                            <label for="attendance_days">Attendance Days:</label>
+                            <input type="number" id="attendance_days" class="form-control" value="22">
+                        </div>
+                        <div class="form-group">
+                            <label for="late_minutes">Late Minutes:</label>
+                            <input type="number" id="late_minutes" class="form-control" value="120">
+                        </div>
+
+                        <button class="btn btn-primary btn-block mt-3" onclick="calculate()">Calculate</button>
+
+                        <div class="row mt-4">
+                            <div class="col-md-4">
+                                <h6>Available Functions:</h6>
+                                <ul class="list-group" id="function-list">
+                                    <!-- List of functions will be loaded here -->
+                                </ul>
+                            </div>
+                            <div class="col-md-8">
+                                <h6>Result:</h6>
+                                <div class="result-container p-3 bg-light border rounded" id="result">RESULT = 0.00</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap and jQuery JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapc om/4.5.2/js/bootstrap.min.js"></script>
+    <script src="/static/javascript.js"></script> <!-- Ganti path sesuai lokasi file -->
+
+    <script>
+        // Load available functions from backend
+        async function loadFunctions() {
+            const response = await fetch('http://localhost:8080/api/functions');
+            const functions = await response.json();
+
+            const functionList = document.getElementById('function-list');
+            functionList.innerHTML = '';
+
+            functions.forEach(func => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item';
+                li.textContent = func;
+                li.onclick = () => addFunctionToExpression(func);  // Event listener untuk klik item
+                functionList.appendChild(li);
+            });
+        }
+
+        // Tambahkan fungsi yang diklik ke input expression
+        function addFunctionToExpression(func) {
+            const expressionInput = document.getElementById('expression');
+            expressionInput.value += func;  // Menambahkan teks fungsi ke input expression
+        }
+
+        // Calculate the expression entered by the user
+        async function calculate() {
+            const expression = document.getElementById('expression').value;
+            const baseSalary = document.getElementById('base_salary').value;
+            const attendanceDays = document.getElementById('attendance_days').value;
+            const lateMinutes = document.getElementById('late_minutes').value;
+
+            const response = await fetch('http://localhost:8080/api/calculate-expression', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    expression: expression,
+                    base_salary: parseFloat(baseSalary),
+                    attendance_days: parseInt(attendanceDays),
+                    late_minutes: parseInt(lateMinutes),
+                    late_penalty_per_minute: 5000  // Example late penalty per minute
+                })
+            });
+
+            const data = await response.json();
+            // Format the result to a readable number
+            const formattedResult = parseFloat(data.result).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('result').innerText = `RESULT = ${formattedResult}`;
+        }
+
+        // Load available functions when the page loads
+        window.onload = loadFunctions;
+    </script>
+
+</body>
+</html>
