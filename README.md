@@ -66,13 +66,16 @@ This project is designed to implement a scalable backend architecture using the 
 ```
 
 ## Getting Started
+
+## RUN USING LOCAL
+
 Clone the repository:
 
 ```bash
 git clone https://github.com/yugosh/backend-golang-mvvm.git
 ```
 
-## Install node_modules nodejs
+Install node_modules nodejs
 ```bash
 cd socketio
 ```
@@ -81,7 +84,7 @@ cd socketio
 npm i
 ```
 
-## Install dependencies:
+Install dependencies:
 ```bash
 cd backend-golang-mvvm
 ```
@@ -90,29 +93,29 @@ cd backend-golang-mvvm
 go mod download
 ```
 
-## Change .ENV variable APP_ENV to 'blank'
+Change .ENV variable APP_ENV to 'blank'
 ```bash
 APP_ENV=local
 ```
 
-## Run database migrations:
+Run database migrations:
 ``` bash
 go run internal/db/migrations.go
 ```
 
-## Run the application:
+Run the application:
 ```bash
 go run cmd/app/main.go
 ```
 
-# RUN USING DOCKER
+## RUN USING DOCKER
 
-## Change .ENV variable APP_ENV to 'docker'
+Change .ENV variable APP_ENV to 'docker'
 ```bash
 APP_ENV=docker
 ```
 
-## Build Docker:
+Build Docker:
 ```bash
 docker-compose up --build
 ```
