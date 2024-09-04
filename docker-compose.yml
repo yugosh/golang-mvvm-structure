@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  app:
+    image: golang:1.23-alpine
+    volumes:
+      - .:/go/src/app
+      - ./static:/app/static
+    working_dir: /go/src/app/cmd/app
+    env_file:
+      - .env
+    command: go run main.go
+    ports:
+      - "8080:8080"
+    depends_on:
+      - azuresql  # Updated to depend on azuresql
+      - redis
+      - rabbitmq
+      - nodejs
+    environment:
+      APP_ENV: docker
+      REDIS_URL: redis:6379
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      JWT_SECRET: #write jwt secret
+      EMAIL_USERNAME: #write email
+      EMAIL_PASSWORD: #write password app google
+      GOOGLE_CLIENT_ID: #notification from firebase cloud messaging
+      GOOGLE_CLIENT_SECRET: #notification from firebase cloud messaging
+      DATABASE_URL: sqlserver://SA:YourStrong!Passw0rd@azuresql:1433?database=db_localhost  # Updated to SQL Server connection
+    networks:
+      - app-network
+
+  azuresql:
+    image: mcr.microsoft.com/azure-sql-edge
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "YourStrong!Passw0rd"
+    ports:
+      - "1433:1433"
+    networks:
+      - app-network
+    volumes:
+      - azuresql_data:/var/opt/mssql  # You can specify this or remove for stateless container
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+
+  rabbitmq:
+    image: rabbitmq:management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - app-network
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  nodejs:
+    build:
+      context: ./socketio  # Path ke folder socketio yang berisi Dockerfile
+      dockerfile: Dockerfile  # Nama Dockerfile
+    ports:
+      - "3000:3000"  # Expose port 3000
+    volumes:
+      - ./socketio:/usr/src/app  # Sync folder lokal dengan folder dalam container
+    environment:
+      - NODE_ENV=development
+    networks:
+      - app-network  # Tambahkan network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  azuresql_data:
+  rabbitmq_data:

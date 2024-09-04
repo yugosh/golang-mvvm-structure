@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">Dashboard</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="/dashboard">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/formula">Formula</a>
+                </li>
+                <li class="nav-item">
+                    <button id="logoutBtn" class="btn btn-danger">Logout</button>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main content -->
+    <div class="container mt-5">
+        <h1>Welcome to the Dashboard</h1>
+        <p>Select a menu item to proceed.</p>
+
+        <form id="queueForm">
+            <div class="mb-3">
+                <label for="message" class="form-label">Message to Queue ID : <span id="socketIDLabel">N/A</span></label>
+                <input type="text" class="form-control" id="message" value="This is a test message">
+            </div>
+            <button type="button" class="btn btn-primary" onclick="sendToQueue()">Send to Queue</button>
+            <button type="button" class="btn btn-secondary" onclick="sendMultipleMessages()">Send to 100 Queue</button>
+        </form>
+    
+        <div id="responseMessage" class="mt-3"></div>
+
+        <!-- Button and area to display the last message -->
+        <button type="button" class="btn btn-secondary mt-3" onclick="requestLastMessage()">Request Last Message</button>
+        <div id="lastMessage" class="mt-3"></div>
+    </div>
+
+    <!-- Bootstrap and jQuery JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+
+    <script>
+        let socketID = '';
+
+        const socket = io('http://localhost:3000', {
+            transports: ['websocket', 'polling']  // Pastikan klien bisa menggunakan WebSocket atau polling
+        });
+
+        socket.on('connect', () => {
+            console.log('Connected to Socket.IO server');
+        });
+
+        // Ketika pesan baru diterima dari server
+        socket.on('new_message', (message) => {
+            console.log('New message received:', message['message']);
+            socketID = message['socketId'];  // Simpan socketID yang diterima
+            document.getElementById('socketIDLabel').innerText = socketID;  // Tampilkan socketID di label
+
+            const lastMessageDiv = document.getElementById('lastMessage');
+            const newMessageHTML = `<div class="alert alert-info">New message received ${message['socketId']} : ${message['message']}</div>`;
+            lastMessageDiv.innerHTML = newMessageHTML + lastMessageDiv.innerHTML;
+        });
+
+        // Ketika RabbitMQ telah memproses dan mengirimkan hasil akhir
+        socket.on('last_message', (message) => {
+            document.getElementById('lastMessage').innerHTML = `<div class="alert alert-info">Last message: ${message}</div>`;
+        });
+
+        // Kirim pesan ke backend Golang (dan diteruskan ke RabbitMQ)
+        async function sendToQueue() {
+            const message = document.getElementById('message').value;
+            const responseMessage = document.getElementById('responseMessage');
+
+            try {
+                const response = await fetch('/api/send-to-queue', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: message, socketId: socketID })  // Kirim socketID ke Golang
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    responseMessage.innerHTML = `<div class="alert alert-success">Message sent to queue successfully: ${data.message}</div>`;
+                } else {
+                    const errorData = await response.json();
+                    responseMessage.innerHTML = `<div class="alert alert-danger">Failed to send message to queue: ${errorData.error}</div>`;
+                }
+            } catch (error) {
+                responseMessage.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+            }
+        }
+
+        // Kirim 100 pesan ke backend Golang
+        async function sendMultipleMessages() {
+            const message = document.getElementById('message').value;
+            const responseMessage = document.getElementById('responseMessage');
+
+            const promises = [];
+
+            for (let i = 0; i < 100; i++) {
+                const messageToSend = `${message} ${i + 1}`;  // Tambahkan angka untuk mengidentifikasi pesan
+                const sendMessagePromise = fetch('/api/send-to-queue', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: messageToSend, socketId: socketID })  // Kirim socketID ke Golang
+                }).then(response => response.json());
+
+                promises.push(sendMessagePromise);
+            }
+
+            try {
+                const results = await Promise.all(promises);
+                responseMessage.innerHTML = `<div class="alert alert-success">All 100 messages sent successfully</div>`;
+            } catch (error) {
+                responseMessage.innerHTML = `<div class="alert alert-danger">Error sending messages: ${error.message}</div>`;
+            }
+        }
+
+        // Request pesan terakhir dari server
+        function requestLastMessage() {
+            socket.emit('request_last_message', 'request');
+        }
+
+        // Handle Google login callback
+        function handleGoogleCallback() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const status = urlParams.get('status');
+            const id = urlParams.get('id');
+
+            if (status === 'success') {
+                handleLoginResponse({ user: { id: id } });
+            } else if (status === 'error') {
+                document.getElementById('result').textContent = 'Google login failed!';
+            }
+        }
+
+        // Panggil fungsi handleGoogleCallback saat halaman dimuat
+        window.onload = handleGoogleCallback;
+
+        // Handle logout button click
+        document.getElementById('logoutBtn').addEventListener('click', async function() {
+            const userID = getLoginData().id;  // Ambil ID user dari storage
+            if (userID) {
+                try {
+                    const response = await fetch(`/api/logout/${userID}`, {
+                        method: 'DELETE'
+                    });
+
+                    const result = await response.json();
+                    if (response.ok) {
+                        localStorage.removeItem('user');
+                        window.location.href = '/';
+                    } else {
+                        document.getElementById('result').textContent = 'Logout failed: ' + result.error;
+                    }
+                } catch (error) {
+                    document.getElementById('result').textContent = 'An error occurred: ' + error.message;
+                }
+            } else {
+                document.getElementById('result').textContent = 'No user ID found for logout.';
+            }
+        });
+    </script>
+</body>
+</html>

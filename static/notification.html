@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Notification Test</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-messaging.js"></script>
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAgWPMzNNwmiG4ddgwFN2Q3KDk_JH4vruI",
+            authDomain: "notification-7055e.firebaseapp.com",
+            projectId: "notification-7055e",
+            storageBucket: "notification-7055e.appspot.com",
+            messagingSenderId: "163130246348",
+            appId: "1:163130246348:web:ac1e50159e230fb5baee69",
+            measurementId: "G-LNZP4LYJ04"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // Initialize Firebase Messaging
+        const messaging = firebase.messaging();
+
+        // Register the service worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/firebase-messaging-sw.js')
+            .then(function(registration) {
+                console.log('Service Worker registered with scope:', registration.scope);
+
+                // Now that service worker is registered, request notification permission and get token
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        console.log('Notification permission granted.');
+                        // Get token with VAPID key
+                        return messaging.getToken({ vapidKey: 'BDPW-rrL4CZcgTon6rwhyDxNHlfgv5vtTduSkIV_8W3HlMRhh_0H3KuZIJVkxJHa7JL3rV-Kl8iJgn85TvdgYdM' });
+                    } else {
+                        console.log('Unable to get permission to notify.');
+                        throw new Error('Permission not granted for Notification');
+                    }
+                }).then(token => {
+                    console.log('FCM Token:', token);
+                    // Send this token to your server or use it to send notifications
+                }).catch(err => {
+                    console.error('An error occurred while retrieving token. ', err);
+                });
+
+            }).catch(function(err) {
+                console.error('Service Worker registration failed: ', err);
+            });
+        } else {
+            console.log('Service workers are not supported by this browser.');
+        }
+
+        // Handle incoming messages while the app is in the foreground
+        messaging.onMessage((payload) => {
+            console.log('Message received. ', payload);
+            const notificationTitle = payload.notification.title;
+            const notificationOptions = {
+                body: payload.notification.body,
+                icon: payload.notification.icon
+            };
+
+            if (Notification.permission === 'granted') {
+                new Notification(notificationTitle, notificationOptions);
+            }
+        });
+    </script>
+</head>
+<body>
+    <h1>Firebase Notification Test</h1>
+</body>
+</html>
