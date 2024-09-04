@@ -65,14 +65,27 @@ This project is designed to implement a scalable backend architecture using the 
 │   └── register.html               # Registration page HTML file
 ```
 
-## Getting Started
+# Getting Started
+This section will help you set up the backend application locally or using Docker. Follow the steps below to configure and run the project.
 
+# Prerequisites
+Ensure you have the following installed on your system:
+```
+Go (version 1.23 or later)
+Docker and Docker Compose
+Node.js (version 14.x or later)
+NPM (for managing Node.js dependencies)
+Git (to clone the repository)
+```
 ## RUN USING LOCAL
 
 Clone the repository:
 
 ```bash
 git clone https://github.com/yugosh/backend-golang-mvvm.git
+```
+```bash
+cd backend-golang-mvvm
 ```
 
 Install node_modules nodejs
@@ -85,10 +98,6 @@ npm i
 ```
 
 Install dependencies:
-```bash
-cd backend-golang-mvvm
-```
-
 ```bash
 go mod download
 ```
